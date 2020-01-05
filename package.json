@@ -2,6 +2,7 @@
   "name": "finance-app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "./build",
   "dependencies": {
     "bootstrap": "^4.3.1",
     "react": "^16.9.0",
@@ -13,7 +14,7 @@
   "devDependencies": {},
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-scripts build && mv ./build/index.html ./index.html",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   }
