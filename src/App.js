@@ -357,7 +357,7 @@ class App extends Component {
               <label class="custom-file-label" for="inputGroupFile01">Choose an Excel file</label>
             </div>
           </div> */}
-          <label htmlFor="file">Upload an Excel file</label>
+          <label htmlFor="file">Download transactions.csv from mint.com then upload to view your monthly breakdowns</label>
           <br />
           <input
             type="file"
