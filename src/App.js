@@ -281,12 +281,12 @@ class App extends Component {
         return (
           <div key={idx} className="categories">
             <span className="underline"><b>{obj.key}</b></span>
-            <span className="underline">{formatCurrency(obj.total)}</span>
+            <span className="underline">{this.formatCurrency(obj.total)}</span>
             {Object.keys(obj.subCat).length && Object.keys(obj.subCat).map((sub, i) => {
               return (
                 <div key={i}>
                   <span>{sub}</span>
-                  <span>{formatCurrency(obj.subCat[sub])}</span>
+                  <span>{this.formatCurrency(obj.subCat[sub])}</span>
                 </div>
               );
             })}
@@ -295,9 +295,9 @@ class App extends Component {
       });
     return (
       <Fragment>
-        <div>Income: <span className="green">{formatCurrency(inc, true)}</span></div>
-        <div>Expense: <span className="red">{formatCurrency(exp)}</span></div>
-        <div><b>Net: <span className={-(exp+inc)>0 ? "green" : "red"}>{formatCurrency(exp+inc, true)}</span></b></div>
+        <div>Income: <span className="green">{this.formatCurrency(inc, true)}</span></div>
+        <div>Expense: <span className="red">{this.formatCurrency(exp)}</span></div>
+        <div><b>Net: <span className={-(exp+inc)>0 ? "green" : "red"}>{this.formatCurrency(exp+inc, true)}</span></b></div>
         <div className="results-pane-byCat">
           {outputJSX}
         </div>
@@ -313,7 +313,7 @@ class App extends Component {
         <div key={idx}>
           <span>{`${row.Date.getMonth()+1}/${row.Date.getDate()}/${row.Date.getFullYear()}`}</span>
           <span>{row.Description}</span>
-          <span>{formatCurrency(row.Amount)}</span>
+          <span>{this.formatCurrency(row.Amount)}</span>
           <span>{row.Category}</span>
           <span>{row["Account Name"]}</span>
           <span>{row.Labels}</span>
