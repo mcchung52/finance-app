@@ -224,10 +224,9 @@ class App extends Component {
     }
     return true;
   }
-  formatCurrency(num, negativeNum=false) {
-    let res = num.toFixed(2);           // 2 decimal
-    res = res.toLocaleString('en-US');  // thousand separator
-    return negativeNum ? "-"+res : res;
+  formatCurrency(num) {
+    let res = num.toFixed(2);             // 2 decimal
+    return res.toLocaleString('en-US');   // thousand separator
   }
   renderByCategories() {
     if (!this.state.chosen) return null;
@@ -295,9 +294,9 @@ class App extends Component {
       });
     return (
       <Fragment>
-        <div>Income: <span className="green">{this.formatCurrency(inc, true)}</span></div>
+        <div>Income: <span className="green">{this.formatCurrency(inc)}</span></div>
         <div>Expense: <span className="red">{this.formatCurrency(exp)}</span></div>
-        <div><b>Net: <span className={-(exp+inc)>0 ? "green" : "red"}>{this.formatCurrency(exp+inc, true)}</span></b></div>
+        <div><b>Net: <span className={-(exp+inc)>0 ? "green" : "red"}>{this.formatCurrency(exp+inc)}</span></b></div>
         <div className="results-pane-byCat">
           {outputJSX}
         </div>
