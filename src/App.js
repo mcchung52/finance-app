@@ -225,8 +225,8 @@ class App extends Component {
     return true;
   }
   formatCurrency(num) {
-    let res = num.toFixed(2);             // 2 decimal
-    return res.toLocaleString('en-US');   // thousand separator
+    let decimal = num.toFixed(2).split('.')[1];
+    return num.toLocaleString('en-US').split('.')[0] + '.' + decimal;
   }
   renderByCategories() {
     if (!this.state.chosen) return null;
