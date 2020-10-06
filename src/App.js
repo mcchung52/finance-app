@@ -224,6 +224,11 @@ class App extends Component {
     }
     return true;
   }
+  formatCurrency(num, negativeNum=false) {
+    let res = num.toFixed(2);           // 2 decimal
+    res = res.toLocaleString('en-US');  // thousand separator
+    return negativeNum ? "-"+res : res;
+  }
   renderByCategories() {
     if (!this.state.chosen) return null;
     let res = {};
@@ -276,12 +281,12 @@ class App extends Component {
         return (
           <div key={idx} className="categories">
             <span className="underline"><b>{obj.key}</b></span>
-            <span className="underline">{obj.total.toFixed(2)}</span>
+            <span className="underline">{formatCurrency(obj.total)}</span>
             {Object.keys(obj.subCat).length && Object.keys(obj.subCat).map((sub, i) => {
               return (
                 <div key={i}>
                   <span>{sub}</span>
-                  <span>{obj.subCat[sub].toFixed(2)}</span>
+                  <span>{formatCurrency(obj.subCat[sub])}</span>
                 </div>
               );
             })}
@@ -290,9 +295,9 @@ class App extends Component {
       });
     return (
       <Fragment>
-        <div>Income: <span className="green">{-inc.toFixed(2)}</span></div>
-        <div>Expense: <span className="red">{exp.toFixed(2)}</span></div>
-        <div><b>Net: <span className={-(exp+inc)>0 ? "green" : "red"}>{-(exp+inc).toFixed(2)}</span></b></div>
+        <div>Income: <span className="green">{formatCurrency(inc, true)}</span></div>
+        <div>Expense: <span className="red">{formatCurrency(exp)}</span></div>
+        <div><b>Net: <span className={-(exp+inc)>0 ? "green" : "red"}>{formatCurrency(exp+inc, true)}</span></b></div>
         <div className="results-pane-byCat">
           {outputJSX}
         </div>
@@ -308,7 +313,7 @@ class App extends Component {
         <div key={idx}>
           <span>{`${row.Date.getMonth()+1}/${row.Date.getDate()}/${row.Date.getFullYear()}`}</span>
           <span>{row.Description}</span>
-          <span>{row.Amount}</span>
+          <span>{formatCurrency(row.Amount)}</span>
           <span>{row.Category}</span>
           <span>{row["Account Name"]}</span>
           <span>{row.Labels}</span>
