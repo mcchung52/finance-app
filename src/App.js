@@ -186,9 +186,10 @@ class App extends Component {
   transformData = (data) => {
     let output = {};
     for (let i=0; i<data.length; i++) {
-      data[i]["Amount"] = Number(data[i]["Amount"]);
       if (data[i]["Transaction Type"] === "credit") {
-        data[i]["Amount"] = -(data[i]["Amount"]);
+        data[i]["Amount"] = data[i]["Amount"];
+      } else {
+        data[i]["Amount"] = -(Number(data[i]["Amount"]));
       }
       delete data[i]["Transaction Type"];
 
@@ -222,14 +223,14 @@ class App extends Component {
       };
 
     if (err !== '') { // if message not same old that mean has error 
-        event.target.value = null // discard selected file
-        console.log(err)
-          return false; 
+        event.target.value = null; // discard selected file
+        console.log(err);
+        return false; 
     }
     return true;
   }
   formatCurrency(num) {
-    let decimal = num.toFixed(2).split('.')[1];
+    let decimal = Number(num).toFixed(2).split('.')[1];
     return num.toLocaleString('en-US').split('.')[0] + '.' + decimal;
   }
   renderByCategories() {
@@ -240,32 +241,32 @@ class App extends Component {
         const idx = subCatMapping[row.Category];
         const catName = categories[idx];
         if (res.hasOwnProperty(catName)) {
-          res[catName].total += row.Amount;
+          res[catName].total += +row.Amount;
           if (res[catName].subCat.hasOwnProperty(row.Category)) {
-            res[catName].subCat[row.Category] += row.Amount;
+            res[catName].subCat[row.Category] += +row.Amount;
           } else {
-            res[catName].subCat[row.Category] = row.Amount;
+            res[catName].subCat[row.Category] = +row.Amount;
           }
         } else {
           res[catName] = {
-            total: row.Amount,
-            subCat: {[row.Category]: row.Amount}
+            total: +row.Amount,
+            subCat: {[row.Category]: +row.Amount}
           };
         }
       }
       else {
         //error-category not in mapping
         if (res.hasOwnProperty("non-matching categories")) {
-          res["non-matching categories"].total += row.Amount;
+          res["non-matching categories"].total += +row.Amount;
           if (res["non-matching categories"].subCat.hasOwnProperty(row.Category)) {
-            res["non-matching categories"].subCat[row.Category] += row.Amount;
+            res["non-matching categories"].subCat[row.Category] += +row.Amount;
           } else {
-            res["non-matching categories"].subCat[row.Category] = row.Amount;
+            res["non-matching categories"].subCat[row.Category] = +row.Amount;
           }
         } else {
           res["non-matching categories"] = {
-            total: row.Amount,
-            subCat: {[row.Category]: row.Amount}
+            total: +row.Amount,
+            subCat: {[row.Category]: +row.Amount}
           };
         }
       }
@@ -279,7 +280,7 @@ class App extends Component {
         return b.total - a.total;
       })
       .map((obj, idx) => {
-        if (obj.total>0) exp += obj.total;
+        if (obj.total<0) exp += obj.total;
         else inc += obj.total;
         return (
           <div key={idx} className="categories">
@@ -300,7 +301,7 @@ class App extends Component {
       <Fragment>
         <div>Income: <span className="green">{this.formatCurrency(inc)}</span></div>
         <div>Expense: <span className="red">{this.formatCurrency(exp)}</span></div>
-        <div><b>Net: <span className={-(exp+inc)>0 ? "green" : "red"}>{this.formatCurrency(exp+inc)}</span></b></div>
+        <div><b>Net: <span className={(exp+inc)>0 ? "green" : "red"}>{this.formatCurrency(exp+inc)}</span></b></div>
         <div className="results-pane-byCat">
           {outputJSX}
         </div>
