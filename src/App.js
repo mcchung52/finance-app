@@ -27,7 +27,8 @@ const categories = [
   "Taxes",
   "Transfer",
   "Travel",
-  "Uncategorized"
+  "Uncategorized",
+  "One-Off"       //internal category to separate non-recurring or at least non-monthly-recurring charges
 ];
 
 const subCatMapping = {
@@ -130,12 +131,37 @@ class App extends Component {
     super(props);
     this.state = {
       file: {},
-      data: [],
+      data: {},
       cols: [],
       chosen: "",
-      toggleTxOn: false
+      toggleTxOn: false,
+      oneoff: {},
+      oneoffCnt: 0
     }
     this.handleChange = this.handleChange.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+  }
+  handleClick = (e, row, idx, addToOneOff) => {
+    console.log("e= ",e);
+    console.log("row= ",row);
+    console.log("idx= ",idx);
+    console.log("addToOneOff= ",addToOneOff);
+    if (addToOneOff) {
+      let oneOffTxBeingAdded = this.state.data[this.state.chosen].splice(idx, 1)[0]; //TODO: account for [] when it's the last one to be removed
+      console.log("oneofftxBeingAdded= ",oneOffTxBeingAdded);
+      if (this.state.oneoff.hasOwnProperty(this.state.chosen)) {        //issue - oneoff gets wiped!!!
+        this.state.oneoff[this.state.chosen].push(oneOffTxBeingAdded);
+        this.setState({oneoff: this.state.oneoff, oneoffCnt: this.state.oneoffCnt+1});
+      } else {
+        this.setState({oneoff:{[this.state.chosen]: [oneOffTxBeingAdded]}, oneoffCnt: this.state.oneoffCnt+1});
+      }
+    } else {
+      let oneOffTxBeingRemoved = this.state.oneoff[this.state.chosen].splice(idx, 1)[0];
+      console.log("oneOffTxBeingRemoved= ",oneOffTxBeingRemoved);
+      //assuming that category is there, since it initially came from reg tx
+      this.state.data[this.state.chosen].push(oneOffTxBeingRemoved); //need to sort
+      this.setState({data: this.state.data, oneoffCnt: this.state.oneoffCnt-1});
+    }
   }
   handleChange = (e) => {
     // console.log("test", e.target.files);
@@ -196,12 +222,12 @@ class App extends Component {
       const date = new Date(data[i].Date);
       data[i].Date = date;
       const month = date.getMonth()+1;
-      const key = `${date.getFullYear()}${month < 10 ? "0"+month : month }`;
+      const dateAsKey = `${date.getFullYear()}${month < 10 ? "0"+month : month }`;
 
-      if (output.hasOwnProperty(key)) {
-        output[key].push(data[i]);
+      if (output.hasOwnProperty(dateAsKey)) {
+        output[dateAsKey].push(data[i]);
       } else {
-        output[key] = [data[i]];
+        output[dateAsKey] = [data[i]];
       }
     }
     return output;
@@ -234,41 +260,139 @@ class App extends Component {
     return num.toLocaleString('en-US').split('.')[0] + '.' + decimal;
   }
   renderByCategories() {
+    console.log("renderByCategories");
     if (!this.state.chosen) return null;
     let res = {};
+
+    // if (this.state.oneoffCnt>0) {
+    if (this.state.oneoff.hasOwnProperty(this.state.chosen)) {
+      res["One-Off"] = { total: 0, subCat: {} };
+
+      for (let row of this.state.oneoff[this.state.chosen]) {
+        if (subCatMapping.hasOwnProperty(row.Category)) {
+          const idx = subCatMapping[row.Category];
+          const catName = categories[idx];
+          
+          res["One-Off"].total += +row.Amount;
+          if (res["One-Off"].subCat.hasOwnProperty(catName)) {
+            res["One-Off"].subCat[catName] += +row.Amount;
+            // if (res["One-Off"][catName].subCat.hasOwnProperty(row.Category)) {
+            //   res["One-Off"][catName].subCat[row.Category] += +row.Amount;
+            // } else {
+            //   res["One-Off"][catName].subCat[row.Category] = +row.Amount;
+            // }
+          } else {
+            res["One-Off"].subCat[catName] = 
+            // {
+            //   total: +row.Amount,
+            //   subCat: {[row.Category]: +row.Amount}
+            // };
+            +row.Amount;
+          }
+        } else {
+          if (res["One-Off"].subCat.hasOwnProperty("non-matching categories")) {
+            res["One-Off"].subCat["non-matching categories"] += +row.Amount;
+            // if (res["non-matching categories"].subCat.hasOwnProperty(row.Category)) {
+            //   res["non-matching categories"].subCat[row.Category] += +row.Amount;
+            // } else {
+            //   res["non-matching categories"].subCat[row.Category] = +row.Amount;
+            // }
+          } else {
+            res["One-Off"].subCat["non-matching categories"] = 
+            // {
+            //   total: +row.Amount,
+            //   subCat: {[row.Category]: +row.Amount}
+            // };
+            +row.Amount;
+          }
+        }
+      }
+    }
+
+    // res(View Model) = {
+    //   category1: {
+    //     total: x,
+    //     subCat: {
+    //       subCategory1: xx,
+    //       subCategory2: yy,
+    //       ...
+    //     }
+    //   },
+    //   ...
+    // }
     for (let row of this.state.data[this.state.chosen]) {
       if (subCatMapping.hasOwnProperty(row.Category)) {
         const idx = subCatMapping[row.Category];
         const catName = categories[idx];
-        if (res.hasOwnProperty(catName)) {
-          res[catName].total += +row.Amount;
-          if (res[catName].subCat.hasOwnProperty(row.Category)) {
-            res[catName].subCat[row.Category] += +row.Amount;
+
+        // if (this.state.oneoffCnt>0 && this.state.oneoff.hasOwnProperty(this.state.chosen)) {
+          // res["One-Off"].total += +row.Amount;
+          // if (res["One-Off"].subCat.hasOwnProperty(catName)) {
+          //   res["One-Off"].subCat[catName] += +row.Amount;
+          //   // if (res["One-Off"][catName].subCat.hasOwnProperty(row.Category)) {
+          //   //   res["One-Off"][catName].subCat[row.Category] += +row.Amount;
+          //   // } else {
+          //   //   res["One-Off"][catName].subCat[row.Category] = +row.Amount;
+          //   // }
+          // } else {
+          //   res["One-Off"].subCat[catName] = 
+          //   // {
+          //   //   total: +row.Amount,
+          //   //   subCat: {[row.Category]: +row.Amount}
+          //   // };
+          //   +row.Amount;
+          // }
+        // } else {
+          if (res.hasOwnProperty(catName)) {
+            res[catName].total += +row.Amount;
+            if (res[catName].subCat.hasOwnProperty(row.Category)) {
+              res[catName].subCat[row.Category] += +row.Amount;
+            } else {
+              res[catName].subCat[row.Category] = +row.Amount;
+            }
           } else {
-            res[catName].subCat[row.Category] = +row.Amount;
+            res[catName] = {
+              total: +row.Amount,
+              subCat: {[row.Category]: +row.Amount}
+            };
           }
-        } else {
-          res[catName] = {
-            total: +row.Amount,
-            subCat: {[row.Category]: +row.Amount}
-          };
-        }
-      }
-      else {
+        // }
+
+      } else {
         //error-category not in mapping
-        if (res.hasOwnProperty("non-matching categories")) {
-          res["non-matching categories"].total += +row.Amount;
-          if (res["non-matching categories"].subCat.hasOwnProperty(row.Category)) {
-            res["non-matching categories"].subCat[row.Category] += +row.Amount;
+
+        // if (this.state.oneoffCnt>0) {
+          // if (res["One-Off"].subCat.hasOwnProperty("non-matching categories")) {
+          //   res["One-Off"].subCat["non-matching categories"] += +row.Amount;
+          //   // if (res["non-matching categories"].subCat.hasOwnProperty(row.Category)) {
+          //   //   res["non-matching categories"].subCat[row.Category] += +row.Amount;
+          //   // } else {
+          //   //   res["non-matching categories"].subCat[row.Category] = +row.Amount;
+          //   // }
+          // } else {
+          //   res["One-Off"].subCat["non-matching categories"] = 
+          //   // {
+          //   //   total: +row.Amount,
+          //   //   subCat: {[row.Category]: +row.Amount}
+          //   // };
+          //   +row.Amount;
+          // }
+
+        // } else {
+          if (res.hasOwnProperty("non-matching categories")) {
+            res["non-matching categories"].total += +row.Amount;
+            if (res["non-matching categories"].subCat.hasOwnProperty(row.Category)) {
+              res["non-matching categories"].subCat[row.Category] += +row.Amount;
+            } else {
+              res["non-matching categories"].subCat[row.Category] = +row.Amount;
+            }
           } else {
-            res["non-matching categories"].subCat[row.Category] = +row.Amount;
+            res["non-matching categories"] = {
+              total: +row.Amount,
+              subCat: {[row.Category]: +row.Amount}
+            };
           }
-        } else {
-          res["non-matching categories"] = {
-            total: +row.Amount,
-            subCat: {[row.Category]: +row.Amount}
-          };
-        }
+        // }
       }
     }
     let inc = 0, exp = 0;
@@ -280,8 +404,11 @@ class App extends Component {
         return b.total - a.total;
       })
       .map((obj, idx) => {
-        if (obj.total<0) exp += obj.total;
-        else inc += obj.total;
+        console.log("obj= ",obj);
+        if (obj.key !== "One-Off") {
+          if (obj.total<0) exp += obj.total;
+          else inc += obj.total;  // TODO: be able to select category to either add to/remove from total
+        }
         return (
           <div key={idx} className="categories">
             <span className="underline"><b>{obj.key}</b></span>
@@ -309,22 +436,51 @@ class App extends Component {
     );
   }
   renderTransactions() {
+    console.log("renderTransactions");
     if (!this.state.chosen) return null;
-    return this.state.data[this.state.chosen].map((row, idx) => {
-      // console.log("at idx ",idx);
-      // console.log("row ",row);
-      return (
-        <div key={idx}>
-          <span>{`${row.Date.getMonth()+1}/${row.Date.getDate()}/${row.Date.getFullYear()}`}</span>
-          <span>{row.Description}</span>
-          <span>{this.formatCurrency(row.Amount)}</span>
-          <span>{row.Category}</span>
-          <span>{row["Account Name"]}</span>
-          <span>{row.Labels}</span>
-          <span>{row.Notes}</span>
+    console.log("this.state.oneoff",this.state.oneoff);
+    console.log("this.state.oneoffCnt",this.state.oneoffCnt);
+    return (
+      <Fragment>
+        <div className="results-tx-left-subpane">
+          <span className="underline"><b>One-Off transactions</b></span>
+          {this.state.oneoff[this.state.chosen] && this.state.oneoff[this.state.chosen].map((row, idx) => {
+            return (
+              <div key={idx}>
+                <i className="arrow-left-circle" role="img"></i>
+                <div className="minus-sign" onClick={(e) => this.handleClick(e,row,idx,false)}>-&nbsp;</div>
+                <span>{`${row.Date.getMonth()+1}/${row.Date.getDate()}/${row.Date.getFullYear()}`}</span>
+                <span>{row.Description}</span>
+                <span>{this.formatCurrency(row.Amount)}</span>
+                <span>{row.Category}</span>
+                {/* <span>{row["Account Name"]}</span>
+                <span>{row.Labels}</span>
+                <span>{row.Notes}</span> */}
+              </div>
+            );
+          })}
         </div>
-      );
-    });
+        <div className="results-tx-right-subpane">
+          {this.state.data[this.state.chosen].map((row, idx) => {
+            // console.log("at idx ",idx);
+            // console.log("row ",row);
+            return (
+              <div key={idx}>
+                <i className="arrow-left-circle" role="img"></i>
+                <div className="plus-sign" onClick={(e) => this.handleClick(e,row,idx,true)}>+&nbsp;</div>
+                <span>{`${row.Date.getMonth()+1}/${row.Date.getDate()}/${row.Date.getFullYear()}`}</span>
+                <span>{row.Description}</span>
+                <span>{this.formatCurrency(row.Amount)}</span>
+                <span>{row.Category}</span>
+                <span>{row["Account Name"]}</span>
+                <span>{row.Labels}</span>
+                <span>{row.Notes}</span>
+              </div>
+            );
+          })}
+        </div>
+      </Fragment>
+    );
   }
   renderBtn() {
     const arrOfKeys = Object.keys(this.state.data);
@@ -343,7 +499,10 @@ class App extends Component {
         {k}
       </button>);
   }
-  render() {
+  render() {      //TODO: left pane to separate one-off or annual to the side, maybe w/ an option to either include/exclude from total
+                  //TODO: top pane to store flagged tx for later review
+    console.log("render, this.state.data= ", this.state.data);
+    console.log("render, this.state.oneoff= ", this.state.oneoff);
     return (
       <div className="App">
         <div className="App-header">
@@ -384,6 +543,7 @@ class App extends Component {
           {this.renderBtn()}
           {this.state.chosen &&
             <div className="results-pane-title">
+              {/* title as date */}
               <b>{`${this.state.chosen.substr(4)}/${this.state.chosen.substr(0,4)}`}</b>
             </div>
           }

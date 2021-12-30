@@ -40,6 +40,21 @@ span {
   margin-top: 30px;
   font-size: 22px;
 }
+.results-tx-left-subpane {
+  display: inline-block;
+  border: 1px solid #6c757d;
+  border-radius: 5px;
+  padding: 20px;
+  width: 25%;
+  vertical-align: top;
+  text-align: left;
+}
+.results-tx-right-subpane {
+  display: inline-block;
+  padding: 0px 20px;
+  text-align: left;
+  width: 75%;
+}
 .underline {
   text-decoration: underline;
 }
@@ -56,4 +71,12 @@ span {
 }
 .red {
   color: red;
+}
+.plus-sign {
+  display: inline;
+  cursor: pointer;
+}
+.minus-sign {
+  display: inline;
+  cursor: pointer;
 }
