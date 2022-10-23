@@ -90,7 +90,7 @@ const subCatMapping = {
   "Rent": 10,
   "Home": 10,
   "Home Services": 10,
-  "Lawun & Garden": 10,
+  "Lawn & Garden": 10,
   "Income": 11,
   "Interest Income": 11,
   "Bonus": 11,
